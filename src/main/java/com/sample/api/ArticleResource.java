@@ -26,14 +26,15 @@ public class ArticleResource {
     private static Map<Long, Article> createArticles() {
         Map<Long, Article> articleMap = new HashMap<>();
         articleMap.put(1L, new Article(1L, "Free Article", "This is a free article.", false));
-        articleMap.put(2L, new Article(2L, "Premium Article", "This is a premium article, for premium members only.", true));
+        articleMap.put(2L,
+                new Article(2L, "Premium Article", "This is a premium article, for premium members only.", true));
         return Collections.unmodifiableMap(articleMap);
     }
 
     @GET
     @Path("/basic")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"basic_access", "premium_access"})
+    @RolesAllowed({ "basic_access", "premium_access" })
     public String getBasicArticle() {
         return "Free Article";
     }
@@ -58,7 +59,8 @@ public class ArticleResource {
             if (isUserInRole(ROLE_PREMIUM)) {
                 return Response.ok(article).build();
             } else {
-                return Response.status(Response.Status.FORBIDDEN).entity("This content is only available for premium members.").build();
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("This content is only available for premium members.").build();
             }
         } else {
             return Response.ok(article).build();

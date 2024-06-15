@@ -1,6 +1,7 @@
 package com.sample.api;
 
 import com.sample.model.Article;
+import com.sample.service.ArticleService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -9,6 +10,8 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
@@ -17,18 +20,32 @@ import java.util.stream.Collectors;
 @Path("/api/articles")
 public class ArticleResource {
 
+    @Inject
+    ArticleService articleService;
+
     private static final String ROLE_PREMIUM = "\"premium_access\"";
-    private static final Map<Long, Article> articles = createArticles();
+//    private static final Map<Long, Article> articles = createArticles();
 
     @Inject
     JsonWebToken jwt;
 
-    private static Map<Long, Article> createArticles() {
-        Map<Long, Article> articleMap = new HashMap<>();
-        articleMap.put(1L, new Article(1L, "Free Article", "This is a free article.", false));
-        articleMap.put(2L,
-                new Article(2L, "Premium Article", "This is a premium article, for premium members only.", true));
-        return Collections.unmodifiableMap(articleMap);
+//    private static Map<Long, Article> createArticles() {
+//        Map<Long, Article> articleMap = new HashMap<>();
+//        articleMap.put(1L, new Article(1L, "Free Article", "This is a free article.", false));
+//        articleMap.put(2L,
+//                new Article(2L, "Premium Article", "This is a premium article, for premium members only.", true));
+//        return Collections.unmodifiableMap(articleMap);
+//    }
+
+    @GET
+    @Path("/titles")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"basic_access", "premium_access"})
+    public Response getArticleTitles() {
+        List<ArticleTitle> titles = articleService.getArticles().stream()
+                .map(article -> new ArticleTitle(article.getId(), article.getTitle()))
+                .collect(Collectors.toList());
+        return Response.ok(titles).build();
     }
 
     @GET
@@ -48,13 +65,14 @@ public class ArticleResource {
     }
 
     @GET
-    @Path("/all/{id}")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getArticleById(@PathParam("id") Long id) {
-        if (!articles.containsKey(id)) {
+        Article article = articleService.getArticle(id);
+        if (article == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("This content may have already deleted.").build();
         }
-        Article article = articles.get(id);
+
         if (article.isPremium()) {
             if (isUserInRole(ROLE_PREMIUM)) {
                 return Response.ok(article).build();
@@ -82,5 +100,12 @@ public class ArticleResource {
             }
         }
         return roles.contains(role);
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class ArticleTitle {
+        private Long id;
+        private String title;
     }
 }

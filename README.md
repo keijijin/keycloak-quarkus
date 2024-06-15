@@ -31,25 +31,15 @@ If you want to build an _über-jar_, execute the following command:
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
 
-## Creating a native executable
-
-You can create a native executable using: 
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+## Run as Docker container
 Make docker image:
 ```
-docker build -f src/main/docker/Dockerfile.native-micro -t news-app .
+docker build -f src/main/docker/Dockerfile.jvm -t news-api .
 ```
 
 Run docker container:
 ```
-
+docker run --name news-api --network my_network -p 8081:8081 -d --rm -d news-api
 ```
 
 You can then execute your native executable with: `./target/keycloak-quarkus-1.0.0-SNAPSHOT-runner`
